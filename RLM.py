@@ -26,7 +26,7 @@ del models[0]
 ######################################################################
 
 
-X = data[['X1', 'X2', 'X3', 'X4', 'X5']].values
+X = data[[X1', 'X2', 'X3', 'X4', 'X5]].values
 Y = data['Y'].values
 
 # skf = StratifiedKFold(n_splits=2)
