@@ -5,7 +5,8 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split  # , StratifiedKFold
 from sklearn import linear_model
 from sklearn import metrics
-yc=0
+yc = 0
+r2 = 0
 data = pd.read_csv(r'yeni.csv')
 Y = data['Y'].values
 ## Generate models 2^k-1
@@ -48,4 +49,7 @@ for i in range(0, len(models)):
             # print (regressor.coef_[a],'*',data[models[i][a]].values[z])
             yc += regressor.coef_[a] * data[models[i][a]].values[z]
         yp = yp.append(regressor.intercept_ + yc)
-    print(yp)
+        yc=0
+    if (regressor.score(X_test, Y_test)) > r2:
+        bmodel = i
+print(models[bmodel])
