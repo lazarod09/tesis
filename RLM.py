@@ -9,6 +9,7 @@ yc = 0
 r2 = 0
 data = pd.read_csv(r'yeni.csv')
 Y = data['Y'].values
+######################################################################
 ## Generate models 2^k-1
 varind = ['X1', 'X2', 'X3']
 model=[]
@@ -43,13 +44,16 @@ for i in range(0, len(models)):
     plt.grid(which='major', linestyle='-', linewidth='0.5', color='green')
     plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
     plt.show()
-    yp = []
-    for z in range(0, len(Y)):
-        for a in range(0, len(regressor.coef_)):
-            # print (regressor.coef_[a],'*',data[models[i][a]].values[z])
-            yc += regressor.coef_[a] * data[models[i][a]].values[z]
-        yp = yp.append(regressor.intercept_ + yc)
-        yc=0
-    if (regressor.score(X_test, Y_test)) > r2:
+    if regressor.score(X_test, Y_test) > r2:
         bmodel = i
+        coef = regressor.coef_
+        intercept = regressor.intercept_
+yp = []
 print(models[bmodel])
+for z in range(0, len(Y)):
+    for a in range(0, len(coef)):
+        # print (regressor.coef_[a],'*',data[models[i][a]].values[z])
+        yc += coef[a] * data[models[bmodel][a]].values[z]
+    yp.append(intercept + yc)
+    yc = 0
+print(yp)
