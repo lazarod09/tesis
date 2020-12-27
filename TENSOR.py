@@ -1,86 +1,128 @@
-import pandas as pd
-import numpy as np
+import pathlib
 
-# Make numpy values easier to read.
-np.set_printoptions(precision=3, suppress=True)
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 
 import tensorflow as tf
-import tensorflow_model_optimization as tfmot
+
 from tensorflow import keras
-import tempfile
-from sklearn.model_selection import train_test_split
+from tensorflow.keras import layers
 
-data = pd.read_csv(r'yeni.csv')
-X = data[['X1', 'X2', 'X3', 'X4', 'X5']].values
-Y = data['Y'].values
+#dataset_path = keras.utils.get_file("auto-mpg.data", "http://archive.ics.uci.edu/ml/machine-learning-databases/auto-mpg/auto-mpg.data")
+#dataset_path
 
-X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=0)
+column_names = ['X1','X2','X3','X4','X5','Y']
+raw_dataset = pd.read_csv(r'yeni.csv', names=column_names,na_values = "?", comment='\t',sep=",", skipinitialspace=True)
+
+dataset = raw_dataset.copy()
+dataset.tail()
+dataset.isna().sum()
+
+train_dataset = dataset.sample(frac=0.8,random_state=0)
+test_dataset = dataset.drop(train_dataset.index)
+
+#sns.pairplot(train_dataset[["MPG", "Cylinders", "Displacement", "Weight"]], diag_kind="kde")
+
+train_stats = train_dataset.describe(include='all')
+train_stats.pop("Y")
+train_stats = train_stats.transpose()
+train_stats
+
+train_labels = train_dataset.pop('Y')
+test_labels = test_dataset.pop('Y')
 
 
-#Define the model architecture.
-def setup_model():
-    model = keras.Sequential([
-      keras.layers.InputLayer(input_shape=(28, 28)),
-      keras.layers.Reshape(target_shape=(28, 28, 1)),
-      keras.layers.Conv2D(filters=12, kernel_size=(3, 3), activation='relu'),
-      keras.layers.MaxPooling2D(pool_size=(2, 2)),
-      keras.layers.Flatten(),
-      keras.layers.Dense(10)
-    ])
-    return model
+def norm(x):
+  return (x - train_stats['mean']) / train_stats['std']
+normed_train_data = norm(train_dataset)
+normed_test_data = norm(test_dataset)
 
-# Train the digit classification model
-def setup_pretrained_weights():
-  model= setup_model()
+def build_model():
+  model = keras.Sequential([
+    layers.Dense(64, activation='relu', input_shape=[len(train_dataset.keys())]),
+    layers.Dense(64, activation='relu'),
+    layers.Dense(1)
+  ])
 
-  model.compile(
-      loss=tf.keras.losses.categorical_crossentropy,
-      optimizer='adam',
-      metrics=['accuracy']
-  )
+  optimizer = tf.keras.optimizers.SGD(
+    learning_rate=0.01, momentum=0.0, nesterov=False, name='SGD')
 
-  model.fit(X_train,y_train)
 
-  _, pretrained_weights = tempfile.mkstemp('.tf')
-
-  model.save_weights(pretrained_weights)
-
-  return pretrained_weights
-
-def setup_pretrained_model():
-  model = setup_model()
-  pretrained_weights = setup_pretrained_weights()
-  model.load_weights(pretrained_weights)
+  model.compile(loss='mse',
+                optimizer=optimizer,
+                metrics=['mae', 'mse'])
   return model
 
-setup_model()
-pretrained_weights = setup_pretrained_weights()
+model = build_model()
 
-base_model = setup_model()
-base_model.load_weights(pretrained_weights) # optional but recommended for model accuracy
+model.summary()
 
-quant_aware_model = tfmot.quantization.keras.quantize_model(base_model)
-quant_aware_model.summary()
-# Create a base model
-base_model = setup_model()
-base_model.load_weights(pretrained_weights) # optional but recommended for model accuracy
+#example_batch = normed_train_data[:10]
+#example_result = model.predict(example_batch)
+#example_result
+# Display training progress by printing a single dot for each completed epoch
+class PrintDot(keras.callbacks.Callback):
+  def on_epoch_end(self, epoch, logs):
+    if epoch % 100 == 0: print('')
+    print('.', end='')
 
-# Helper function uses `quantize_annotate_layer` to annotate that only the
-# Dense layers should be quantized.
-def apply_quantization_to_dense(layer):
-  if isinstance(layer, tf.keras.layers.Dense):
-    return tfmot.quantization.keras.quantize_annotate_layer(layer)
-  return layer
+EPOCHS = 1000
 
-# Use `tf.keras.models.clone_model` to apply `apply_quantization_to_dense`
-# to the layers of the model.
-annotated_model = tf.keras.models.clone_model(
-    base_model,
-    clone_function=apply_quantization_to_dense,
-)
+# The patience parameter is the amount of epochs to check for improvement
+early_stop = keras.callbacks.EarlyStopping(monitor='val_loss', patience=30)
 
-# Now that the Dense layers are annotated,
-# `quantize_apply` actually makes the model quantization aware.
-quant_aware_model = tfmot.quantization.keras.quantize_apply(annotated_model)
-quant_aware_model.summary()
-print(base_model.layers[0].name)
+history = model.fit(normed_train_data, train_labels, epochs=EPOCHS,
+                    validation_split = 0.2, verbose=0, callbacks=[early_stop, PrintDot()])
+
+
+hist = pd.DataFrame(history.history)
+hist['epoch'] = history.epoch
+hist.tail()
+
+def plot_history(history):
+  hist = pd.DataFrame(history.history)
+  hist['epoch'] = history.epoch
+
+  plt.figure()
+  plt.xlabel('Epoch')
+  plt.ylabel('Mean Abs Error [Y]')
+  plt.plot(hist['epoch'], hist['mae'],
+           label='Train Error')
+  plt.plot(hist['epoch'], hist['val_mae'],
+           label = 'Val Error')
+  plt.ylim([0,5])
+  plt.legend()
+
+  plt.figure()
+  plt.xlabel('Epoch')
+  plt.ylabel('Mean Square Error [$Y^2$]')
+  plt.plot(hist['epoch'], hist['mse'],
+           label='Train Error')
+  plt.plot(hist['epoch'], hist['val_mse'],
+           label = 'Val Error')
+  plt.ylim([0,20])
+  plt.legend()
+  plt.show()
+
+
+plot_history(history)
+loss, mae, mse = model.evaluate(normed_test_data, test_labels, verbose=2)
+
+print("Testing set Mean Abs Error: {:5.2f} Y".format(mae))
+
+test_predictions = model.predict(normed_test_data).flatten()
+
+plt.scatter(test_labels, test_predictions)
+plt.xlabel('True Values [Y]')
+plt.ylabel('Predictions [Y]')
+plt.axis('equal')
+plt.axis('square')
+plt.xlim([0,plt.xlim()[1]])
+plt.ylim([0,plt.ylim()[1]])
+_ = plt.plot([-100, 100], [-100, 100])
+
+error = test_predictions - test_labels
+plt.hist(error, bins = 25)
+plt.xlabel("Prediction Error [Y]")
+_ = plt.ylabel("Count")
