@@ -1,0 +1,19 @@
+# Install
+#sudo apt install libfreetype6-dev
+#Dependencias de matplotlib
+freetype-py
+pypng
+###########
+#IA
+sklearn
+tensorflow
+keras
+# Data
+pandas
+scipy
+numpy
+statsmodels
+matplotlib==3.2
+#Excell Read
+xlrd
+
