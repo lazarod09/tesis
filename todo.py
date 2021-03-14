@@ -42,46 +42,9 @@ sign = 0.05
 #####################################################
 XX = sm.add_constant(X)
 met1= sm.OLS(y, XX).fit()
-########################################################################################################################
-# cp_value = ((met1.ssr/met1.mse_resid)-len(met1.resid)+2*met1.df_model)/ met1.df_model
-
-########################################################################################################################
-# # Calculo VIF & TOL
-# vif = 0
-# tol = 0
-# for h in range(1, len(met1.model.exog_names)):
-#     if oi.variance_inflation_factor(met1.model.exog, h) > vif:
-#         vif = oi.variance_inflation_factor(met1.model.exog, h)
-#     if (1 / vif) > tol:
-#         tol = (1 / vif)
-########################################################################################################################
-#   # T Sign
-# pv_t = 0
-# tpvalues = 0
-# for h in range(1, len(met1.pvalues)):
-#     if met1.pvalues[h] < sign:
-#         pv_t += 1
-# if pv_t == (len(met1.pvalues)-1):
-#     tpvalues = 1
-# else:
-#     tpvalues = 0
-########################################################################################################################
-#   ##  TEST ###
+# Seria Mejor llamar al que dice OLS-Modif
+#####################################################
 print(met1.summary())
-# print('p-value(F) ',met1.f_pvalue)
-# print(' T ',tpvalues)
-# print(' JB ',sms.jarque_bera(met1.resid)[1])
-# print(' AD ',sms.normal_ad(met1.resid)[1])
-# print(' SW ',sci.stats.shapiro(met1.resid)[1])
-# print(' Zt',sms.ztest(met1.resid,x2=None,value=0, alternative='two-sided', usevar='pooled', ddof=1.0)[1])
-# print(' BP ',sms.het_breuschpagan(met1.resid, met1.model.exog)[1])
-# print(' BG ',sms.acorr_breusch_godfrey(met1, nlags=2)[1])
-# print(' AIC ',met1.aic)
-# print(' BIC ',met1.bic)
-# print(' CP ',cp_value)
-# print(' R^2 ajustada OLS ',met1.rsquared_adj)
-# print('MSE_OLS', met1.mse_resid)
-# print(' VIF, TOL ',vif, tol)
 ols_y= met1.predict(XX)
 ols_resid = y - ols_y
 #####################################################

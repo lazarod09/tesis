@@ -44,7 +44,7 @@ test_bmodel = []
 less_alpha = ['fpvalue', 'CUSUM']
 high_alpha = ['LML', 'RB', 'RESET', 'JB', 'AD', 'SW', 'TRESID', 'BPG', 'WH', 'ARCH', 'BG','JK']
 cerouno = ['TOL', 'CP']
-df = pd.DataFrame(columns=['r_adj','fpvalue','tpvalue', 'AD', 'TRESID', 'BPG','BG','TOL'])
+df = pd.DataFrame(columns=['r_adj','fpvalue','tpvalue', 'AD', 'TRESID', 'BPG','BG','TOL','AIC','CP'])
 
 # #Operations
 #####################################################
@@ -234,15 +234,6 @@ for i in range(0, len(models)):
             else:
                 dic_matriz_dist['value'] = 1
                 BG = 0
-#        #Jk Value
-        if test[j]['name'] == 'JK':
-            dic_matriz_dist['value'] = []
-            if sign <= value:
-                dic_matriz_dist['value'] = 3
-                JK = 3 
-            else:
-                dic_matriz_dist['value'] = 1
-                JK = 0
 ##############################################
 #   ## Pruebas de Coherencia Estadistica ####
 #        #pvalue F  Global
@@ -265,18 +256,6 @@ for i in range(0, len(models)):
                 tpvalue = 0
 ##############################################
 #        ### Criterios de informacion ####
-#        #VIF
-        if test[j]['name'] == 'VIF':
-            dic_matriz_dist['value'] = []
-            if value < 5:
-                dic_matriz_dist['value'] = 3
-                VIF = 3
-            elif 5 < value < 10:
-                dic_matriz_dist['value'] = 2
-                VIF = 2
-            else:
-                dic_matriz_dist['value'] = 1
-                VIF = 0
 #        #TOL
         if test[j]['name'] == 'TOL':
             dic_matriz_dist['value'] = []
@@ -339,9 +318,9 @@ for i in range(0, len(models)):
 ##############################################
         test_matriz_dist.append(dic_matriz_dist)  
         test_df = pd.DataFrame.from_dict(
-        	dict([(data_models[i]['model'],[r_adj,fpvalue,tpvalue,AD, TRESID, BPG, BG,TOL])]),
+        	dict([(data_models[i]['model'],[r_adj,fpvalue,tpvalue,AD, TRESID, BPG, BG,TOL,AIC, CP])]),
         	orient="index",
-        	columns=['r_adj','fpvalue','tpvalue', 'AD', 'TRESID', 'BPG','BG','TOL'],
+        	columns=['r_adj','fpvalue','tpvalue', 'AD', 'TRESID', 'BPG','BG','TOL','AIC','CP'],
         	)
     if (AD == 0) or ( BPG == 0) or ( TOL < 3) or (tpvalue == 0) or (r_adj  < 0.6):
         continue
@@ -351,9 +330,6 @@ for i in range(0, len(models)):
     
 print(df)
 ###############################
-print('        latex')
-###############################
-print(df.to_latex( ))
 ###############################
 print()
 ols_y= results.predict()
