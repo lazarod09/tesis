@@ -192,7 +192,6 @@ for i in range(0, len(models)):
                 dic_matriz_dist['value'] = 2
             else:
                 dic_matriz_dist['value'] = 1
-
 ##############################################
         test_matriz_dist.append(dic_matriz_dist)
     dic_model_matriz['test'] = test_matriz_dist
@@ -240,7 +239,9 @@ criterios = [
    {'name': 'BondadAjuste', 'test': ['r_adj'], 'value': 0, 'supremo': 0},
 ]
 ################################################################################################################
-##Aqui
+##SI criterio de normalidad , Heterocedasticidad dan 2 mal eliminar ese modelo (si es mayor que )
+# Si criterio Multicolinealidad da 1 mal eliminar ese modelo
+
 matriz_criterios = []
 for i in range(0, len(models)):
    dic_criterios_modelo = {}
