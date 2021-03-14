@@ -12,12 +12,13 @@ import scipy as sci
 # Define Vars
 #####################################################
 # Load Data
-data = pd.read_csv(r'chiller.csv')
+#data = pd.read_csv(r'yeni.csv')
+data = pd.read_excel(r'BD.xlsx', sheet_name='Cfgos')
 ####################
 ######################################################################
 ## Generate models 2^k-1
-vardep='x1~'
-varind = ['t2','t3']
+vardep='Y~'
+varind = ['X1','X2','X3','X4','X5']
 model=[]
 def potencia(c):
     if len(c) == 0:
@@ -144,7 +145,7 @@ for i in range(0, len(models)):
                 dic_matriz_dist['value'] = 1
 ##############################################
 #   ## Pruebas   ####
-        if test_['name'] in mayor_alpha:
+        if test_['name'] in high_alpha:
             if sign <= value :
                 dic_matriz_dist['value'] = 3
             else:

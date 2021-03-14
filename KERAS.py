@@ -12,7 +12,7 @@ from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 
-data = pd.read_excel(r'BD.xlsx', sheet_name='BD')
+data = pd.read_excel(r'BD.xls', sheet_name='BD')
 Y = data['Y'].values
 X = data[['X1', 'X2', 'X3', 'X4', 'X5']].values
 W_temp = 0
