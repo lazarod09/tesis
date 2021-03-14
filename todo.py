@@ -28,7 +28,7 @@ import statistics as stat
 #####################################################
 #               MARS
 #####################################################
-#from pyearth import Earth
+from pyearth import Earth
 #####################################################
 # Load Data
 data = pd.read_excel(r'BD.xls', sheet_name='RLuna')
@@ -40,7 +40,8 @@ sign = 0.05
 #####################################################
 #                  OLS
 #####################################################
-
+XX = sm.add_constant(X)
+met1= sm.OLS(y, XX).fit()
 ########################################################################################################################
 # cp_value = ((met1.ssr/met1.mse_resid)-len(met1.resid)+2*met1.df_model)/ met1.df_model
 
@@ -98,34 +99,18 @@ X_train, X_test, Y_train, Y_test = train_test_split(X, y, test_size=0.2, random_
 regressor = regressor.fit(X_train, Y_train)
 SK_y = regressor.predict(X)
 SK_resid = y - SK_y
-######################################################
-#       medidas del error y pruebas de normalidad
-#######################################################
-# print('Mean Absolute Error:', metrics.mean_absolute_error(Y_test, y_pred))
-# print('Mean Squared Error:', metrics.mean_squared_error(Y_test, y_pred))
-# print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(Y_test, y_pred)))
-print(' R^2 ajustada SKLEARN', regressor.score(X_test, Y_test))
-# df1.plot(kind='bar', figsize=(10, 8))
-# plt.grid(which='major', linestyle='-', linewidth='0.5', color='green')
-# plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
-# plt.show()
-# allpred = regressor.predict(X)
-# ressid= allpred - Y
-# print('Normalidad: AD(pvalue)', sms.normal_ad(ressid)[1])
-# print('JB', sms.jarque_bera(ressid)[1])
 #####################################################
 #               MARS
 #####################################################
-# mars = Earth() #max_degree=(1),penalty=(1.0), endspan=(5)
-# mars.fit(X,y)
-# print(mars.trace())
-# print(mars.summary())
-# print(np.sqrt(mars.mse_))
-# print(' R^2 ajustada MARS',mars.grsq_)
-#Plot the model
-# mars_y = mars.predict(X)
-# mars_resid = y-mars_y
+mars = Earth() #max_degree=(1),penalty=(1.0), endspan=(5)
+mars.fit(X,y)
+print(mars.trace())
+print(mars.summary())
+
+mars_y = mars.predict(X)
+mars_resid = y-mars_y
 ######################################
+#Real Vs OLS
 df = pd.DataFrame({'Actual': y, 'OLS': ols_y})
 df1 = df.head(120)
 df1.plot(kind='line', figsize=(10, 8), color=["blue","orange"])
@@ -133,6 +118,7 @@ plt.grid(which='major', linestyle='-', linewidth='0.5', color='green')
 plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 plt.savefig('sec_ols.eps', transparent= True)
 plt.show()
+#Real Vs SKLEARN
 df = pd.DataFrame({'Actual': y,'SKLEARN': SK_y})
 df1 = df.head(120)
 df1.plot(kind='line', figsize=(10, 8), color=["blue","green"])
@@ -140,6 +126,7 @@ plt.grid(which='major', linestyle='-', linewidth='0.5', color='green')
 plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 plt.savefig('sec_sk.eps', transparent= True)
 plt.show()
+#Real Vs MARS
 df = pd.DataFrame({'Actual': y,  'MARS': mars_y})
 df1 = df.head(120)
 df1.plot(kind='line', figsize=(10, 8), color=["blue","red"])
@@ -147,6 +134,7 @@ plt.grid(which='major', linestyle='-', linewidth='0.5', color='green')
 plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 plt.savefig('sec_mars.eps', transparent= True)
 plt.show()
+#Real Vs ALL
 df = pd.DataFrame({'Actual': y, 'OLS': ols_y, 'SKLEARN': SK_y, 'MARS': mars_y})
 df1 = df.head(120)
 df1.plot(kind='line', figsize=(10, 8), color=["blue","orange","green", "red"])
@@ -154,6 +142,7 @@ plt.grid(which='major', linestyle='-', linewidth='0.5', color='green')
 plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 plt.savefig('sec_all.eps', transparent= True)
 plt.show()
+#Residuos OLS, SKLEARN, MARS
 df = pd.DataFrame({'OLS': ols_resid})
 df1 = df.head(120)
 df1.plot(kind='hist', figsize=(10, 8), color="orange")
@@ -184,17 +173,6 @@ plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
 plt.legend(loc='upper right')
 plt.savefig('hist_all.eps', transparent= True)
 plt.show()
-# df = pd.DataFrame({'OLS': ols_resid, 'SKLEARN': SK_resid, 'MARS': mars_resid})
-# df1 = df.head(120)
-# df1.plot(kind='hist', figsize=(10, 8), color=["orange","green", "red"])
-# plt.grid(which='major', linestyle='-', linewidth='0.5', color='green')
-# plt.grid(which='minor', linestyle=':', linewidth='0.5', color='black')
-# plt.show()
-
-# print('Mean Absolute Error:', metrics.mean_absolute_error(y, ols_y))
-# print('Mean Squared Error:', metrics.mean_squared_error(y, ols_y))
-# print('Root Mean Squared Error:', np.sqrt(metrics.mean_squared_error(y, ols_y)))
-
 
 test = pd.DataFrame.from_dict(
 	dict([("OLS", [met1.rsquared_adj, skm.mean_absolute_error(y, ols_y), met1.mse_resid,  np.sqrt(skm.mean_squared_error(y, ols_y))]),
@@ -206,10 +184,6 @@ test = pd.DataFrame.from_dict(
 print(test)
 
 ###############################
-print('        latex')
-###############################
-print(test.to_latex( ))
-###############################
 print()
 
 test1 = pd.DataFrame.from_dict(
@@ -220,9 +194,3 @@ test1 = pd.DataFrame.from_dict(
 	columns=[ "JB", "AD", "SW"],
 	)
 print(test1)
-###############################
-print('        latex')
-###############################
-print(test1.to_latex( ))
-###############################
-print()

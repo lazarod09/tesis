@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Dec 29 15:02:53 2020
-
-@author: Miguel
-"""
 import numpy as np
 import pandas as pd
 from pyearth import Earth
@@ -16,16 +11,9 @@ import scipy as sci
 data = pd.read_excel(r'BD.xlsx', sheet_name='Cfgos', engine='openpyxl')
 y = data['Y'].values
 X = data[['X1', 'X2','X4', 'X5']].values
-#Create some fake data
-# numpy.random.seed(0)
-# m = 1000
-# n = 10
-# X = 80*numpy.random.uniform(size=(m,n)) - 40
-# y = numpy.abs(X[:,6] - 4.0) + 1*numpy.random.normal(size=m)
 
 #Fit an Earth model
 model = Earth() #max_degree=(1),penalty=(1.0), endspan=(5)
-#model.forward_pass(X,y)
 model.fit(X,y)
 
 #Print the model
