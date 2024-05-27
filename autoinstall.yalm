@@ -1,0 +1,24 @@
+autoinstall:
+  locale: es_ES
+  keyboard:
+    layout: es
+  interactive-sections:
+    - storage
+  apt:
+    preserve_sources_list: false
+    mirror-selection:
+      primary:
+        - arches: [default]
+          uri: "http://repos.farmacia.cfg.sld.cu/noble"
+    fallback: abort
+    geoip: true
+  identity:
+    realname: 'Administrador RED EPFO Cfgos'
+    username: administrador
+    password: '$6$wdAcoXrU039hKYPd$508Qvbe7ObUnxoj15DRCkzC3qO7edjH0VV7BPNRDYK4QR8ofJaEEF2heacn0QgD.f8pO8SNp83XNdWG6tocBM1'
+    hostname: ubuntu
+  updates: all
+  timezone: America/Havana
+  late-commands:
+    - curtin in-target -- apt update
+    - curtin in-target -- apt install -y openssh-server vlc
